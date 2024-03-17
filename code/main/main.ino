@@ -36,6 +36,7 @@ PC1 - UP switch
 #define DATE_ADDR       0x04
 #define MONTH_ADDR      0x05
 #define YEAR_ADDR       0x06
+#define AL1_SEC_ADDR    0x07
 #define AL1_MIN_ADDR    0x08
 #define AL1_HOUR_ADDR   0x09
 #define AL1_STATE_ADDR  0x0A
@@ -44,6 +45,13 @@ PC1 - UP switch
 #define AL2_STATE_ADDR  0x0D
 #define CTRL_ADDR       0x0E
 #define STATUS_ADDR     0x0F
+
+//Function prototypes
+uint8_t rtc_read(uint8_t);
+uint8_t read_digit(uint8_t, bool);
+bool bit_read(uint8_t, uint8_t);
+void rtc_write(uint8_t, uint8_t);
+void display_write();
 
 //Menu list
 enum menu_list {
@@ -61,11 +69,29 @@ enum menu_list {
   WRITE_DATE,
   WRITE_MONTH,
   WRITE_YEAR,
-  WRITE_ALARM1,
+  WRITE_ALARM1_HOUR,
+  WRITE_ALARM1_MINUTE,
+  WRITE_ALARM1_SECOND,
   WRITE_ALARM1_STATUS,
-  WRITE_ALARM2,
+  WRITE_ALARM2_HOUR,
+  WRITE_ALARM2_MINUTE,
   WRITE_ALARM2_STATUS
 };
+
+//Menu display structure definition
+typedef struct Display {
+  bool dots[DIGITS_COUNT];
+  uint8_t digits[DIGITS_COUNT];
+  } display;
+
+//Menu display structures with default (blank) values
+display read_time = {{0,1,0,1,0}, {10, 10, 10, 10, 10}};
+display read_date = {{1,0,1,0,1}, {10, 10, 10, 10, 10}};
+display read_year = {{0,0,0,0,0}, {2, 0, 10, 10, 10}};
+display read_alarm1 = {{0,1,0,1,0}, {10, 10, 10, 10, 10}};
+display read_alarm1_status = {{0,0,0,0,0}, {10,10,11,13,13}};
+display read_alarm2 = {{0,1,0,1,0}, {10, 10, 10, 10, 0}};
+display read_alarm2_status = {{0,0,0,0,0}, {10,10,10,13,13}};
 
 //Current position for display
 uint8_t position = 0;
@@ -75,12 +101,13 @@ volatile enum menu_list menu = READ_TIME;
 volatile bool write_mode = 0;
 //Digit up write value
 volatile uint8_t up = 0;
-//Current digits array with digit number and dot point status
-uint8_t display_array[DIGITS_COUNT][2];
+
+//Menu structure pointer array
+display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status};
 //Position lookup table for PORT manipulation
 const uint8_t position_array[DIGITS_COUNT] = {0b00000001, 0b00000010, 0b00000100, 0b01000000, 0b10000000};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
-const uint8_t digits_array[11] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111, 0b00000000};  //0,1,2,3,4,5,6,7,8,9,null
+const uint8_t digits_array[14] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111, 0b00000000, 0b01011100, 0b00110111, 0b01110001};  //0,1,2,3,4,5,6,7,8,9,null,o,n,f
 
 //Interrupt service routine for Timer 1 to regularly update display
 ISR(TIMER1_COMPA_vect) {
@@ -101,10 +128,10 @@ ISR(PCINT1_vect) {
     TCCR3B = 0b00000011;      //Start Timer 3 with 64 prescaler
     menu = menu + 1;          //Cycle through menus
     if (menu > READ_ALARM2_STATUS & !write_mode) {
-      menu = READ_HOUR;
+      menu = READ_TIME;
     }
     else if (menu > WRITE_ALARM2_STATUS & write_mode){
-      menu = READ_HOUR;
+      menu = READ_TIME;
       write_mode = 0;
     }
   }
@@ -145,18 +172,6 @@ void setup() {
   PCIFR |= 0b00000111; //Clear interrupt flags
   PCMSK1 |= 0b00000011; //Enable PCI for PC0 and PC1
   
-  //Initial display values
-  display_array[0][0] = 0;
-  display_array[1][0] = 0;
-  display_array[2][0] = 0;
-  display_array[3][0] = 0;
-  display_array[4][0] = 0;
-  display_array[0][1] = 0;
-  display_array[1][1] = 0;
-  display_array[2][1] = 0;
-  display_array[3][1] = 0;
-  display_array[4][1] = 0;
-  
   //Initialize I2C communication library
   Wire.begin();
   
@@ -169,211 +184,163 @@ void setup() {
 
 void loop() {
   switch(menu) {
+    
     case READ_TIME:
-    //Set dot positions
-    display_array[0][1] = 0;
-    display_array[1][1] = 1;
-    display_array[2][1] = 0;
-    display_array[3][1] = 1;
-    display_array[4][1] = 0;
-    //Read data from RTC
-    rtc_read(HOUR_ADDR, 0, 1);
-    rtc_read(MIN_ADDR, 2, 3);
-    rtc_read(SEC_ADDR, 4, 5);
+      read_time.digits[0] = read_digit(HOUR_ADDR,1);
+      read_time.digits[1] = read_digit(HOUR_ADDR,0);
+      read_time.digits[2] = read_digit(MIN_ADDR,1);
+      read_time.digits[3] = read_digit(MIN_ADDR,0);
+      read_time.digits[4] = read_digit(SEC_ADDR,1);
+    break;
+      
+    case READ_DATE:
+      read_date.digits[0] = read_digit(DAY_ADDR,0);
+      read_date.digits[1] = read_digit(DATE_ADDR,1);
+      read_date.digits[2] = read_digit(DATE_ADDR,0);
+      read_date.digits[3] = read_digit(MONTH_ADDR,1);
+      read_date.digits[4] = read_digit(MONTH_ADDR,0);
+    break;
+      
+    case READ_YEAR:
+      read_year.digits[2] = read_digit(YEAR_ADDR,1);
+      read_year.digits[3] = read_digit(YEAR_ADDR,0);
+    break;
+      
+    case READ_ALARM1:
+      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
+      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
+      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+      read_alarm1.digits[4] = read_digit(AL1_SEC_ADDR,1);
     break;
 
-    case READ_DATE: //Date
-    display_array[0][1] = 1;
-    display_array[1][1] = 0;
-    display_array[2][1] = 1;
-    display_array[3][1] = 0;
-    display_array[4][1] = 1;
-    rtc_read(DAY_ADDR, 0, 5);
-    rtc_read(DATE_ADDR, 1, 2);
-    rtc_read(MONTH_ADDR, 3, 4);
+    case READ_ALARM1_STATUS:
+    break;
+    
+    case READ_ALARM2:
+      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
+      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
+      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+    break;
+      
+    case READ_ALARM2_STATUS:
     break;
 
-    case READ_YEAR: //Year
-    display_array[0][1] = 0;
-    display_array[1][1] = 0;
-    display_array[2][1] = 0;
-    display_array[3][1] = 0;
-    display_array[4][1] = 0;
-    display_array[0][0] = 10;
-    display_array[1][0] = 2;
-    display_array[2][0] = 0;
-    rtc_read(YEAR_ADDR, 3, 4);
+    case WRITE_HOUR:
+      read_time.digits[0] = read_digit(HOUR_ADDR,1);
+      read_time.digits[1] = read_digit(HOUR_ADDR,0);
+      delay(500);
+      read_time.digits[0] = 10;
+      read_time.digits[1] = 10;
+      delay(500);
     break;
 
-    case WRITE_HOUR: //Set hour
-    display_array[0][1] = 0;
-    display_array[1][1] = 1;
-    display_array[2][1] = 0;
-    display_array[3][1] = 1;
-    display_array[4][1] = 0;
-    rtc_read(MIN_ADDR, 2, 3);
-    rtc_read(SEC_ADDR, 4, 5);
-    delay(200);
-    display_array[0][0] = 10;
-    display_array[1][0] = 10;
-    delay(200);
-    if (rtc_read(HOUR_ADDR, 0, 1) + up < 24) {
-    rtc_write(HOUR_ADDR, up + rtc_read(HOUR_ADDR, 0, 1));
-    up = 0;
-    }
-    else {
-      up = 0;
-      rtc_write(HOUR_ADDR, up);
-    }
+
+    case WRITE_MINUTE:
+      read_time.digits[2] = read_digit(MIN_ADDR,1);
+      read_time.digits[3] = read_digit(MIN_ADDR,0);
+      delay(500);
+      read_time.digits[2] = 10;
+      read_time.digits[3] = 10;
+      delay(500);
     break;
 
-    case WRITE_MINUTE: //Set minute
-    display_array[0][1] = 0;
-    display_array[1][1] = 1;
-    display_array[2][1] = 0;
-    display_array[3][1] = 1;
-    display_array[4][1] = 0;
-    rtc_read(HOUR_ADDR, 0, 1);
-    rtc_read(SEC_ADDR, 4, 5);
-    delay(200);
-    display_array[2][0] = 10;
-    display_array[3][0] = 10;
-    delay(200);
-    if (rtc_read(MIN_ADDR, 2, 3) + up < 60) {
-    rtc_write(MIN_ADDR, up + rtc_read(MIN_ADDR, 2, 3));
-    }
-    else {
-      up = 0;
-      rtc_write(MIN_ADDR, up);
-    }
+    case WRITE_SECOND:
+      read_time.digits[4] = read_digit(SEC_ADDR,1);
+      delay(500);
+      read_time.digits[4] = 10;
+      delay(500);
     break;
 
-    case WRITE_SECOND: //Set second
-    display_array[0][1] = 0;
-    display_array[1][1] = 1;
-    display_array[2][1] = 0;
-    display_array[3][1] = 1;
-    display_array[4][1] = 0;
-    rtc_read(HOUR_ADDR, 0, 1);
-    rtc_read(MIN_ADDR, 2, 3);
-    delay(200);
-    display_array[4][0] = 10;
-    delay(200);
-    if (up + rtc_read(SEC_ADDR, 4, 5) < 60) {
-    rtc_write(SEC_ADDR, up + rtc_read(SEC_ADDR, 4, 5));
-    }
-    else {
-      up = 0;
-      rtc_write(SEC_ADDR, up);
-    }
+    case WRITE_DAY:
+      read_date.digits[0] = read_digit(DAY_ADDR,0);
+      delay(500);
+      read_date.digits[0] = 10;
+      delay(500);
     break;
 
-    case WRITE_DAY: //Set day
-    display_array[0][1] = 1;
-    display_array[1][1] = 0;
-    display_array[2][1] = 1;
-    display_array[3][1] = 0;
-    display_array[4][1] = 1;
-    rtc_read(DATE_ADDR, 1, 2);
-    rtc_read(MONTH_ADDR, 3, 4);
-    delay(200);
-    display_array[0][0] = 10;
-    delay(200);
-    if (up + rtc_read(DAY_ADDR, 0, 5) < 8 & rtc_read(DAY_ADDR, 0, 5) + up > 0) {
-    rtc_write(DAY_ADDR, up + rtc_read(DAY_ADDR, 0, 5));
-    }
-    else {
-      up = 1;
-      rtc_write(DAY_ADDR, up);
-    }
+    case WRITE_DATE:
+      read_date.digits[1] = read_digit(DATE_ADDR,1);
+      read_date.digits[2] = read_digit(DATE_ADDR,0);
+      delay(500);
+      read_date.digits[1] = 10;
+      read_date.digits[2] = 10;
+      delay(500);
     break;
 
-    case WRITE_DATE: //Set date
-    display_array[0][1] = 1;
-    display_array[1][1] = 0;
-    display_array[2][1] = 1;
-    display_array[3][1] = 0;
-    display_array[4][1] = 1;
-    rtc_read(DAY_ADDR, 0, 5);
-    rtc_read(MONTH_ADDR, 3, 4);
-    delay(200);
-    display_array[1][0] = 10;
-    display_array[2][0] = 10;
-    delay(200);
-    if (rtc_read(DATE_ADDR, 1, 2) + up < 32 & rtc_read(DATE_ADDR, 1, 2) + up > 0) {
-    rtc_write(DATE_ADDR, up + rtc_read(DATE_ADDR, 1, 2));
-    }
-    else {
-      up = 1;
-      rtc_write(DATE_ADDR, up);
-    }
+    case WRITE_MONTH:
+      read_date.digits[3] = read_digit(MONTH_ADDR,1);
+      read_date.digits[4] = read_digit(MONTH_ADDR,0);
+      delay(500);
+      read_time.digits[3] = 10;
+      read_time.digits[4] = 10;
+      delay(500);
     break;
 
-    case WRITE_MONTH: //Set month
-    display_array[0][1] = 1;
-    display_array[1][1] = 0;
-    display_array[2][1] = 1;
-    display_array[3][1] = 0;
-    display_array[4][1] = 1;
-    rtc_read(DAY_ADDR, 0, 5);
-    rtc_read(DATE_ADDR, 1, 2);
-    rtc_read(MONTH_ADDR, 3, 4);
-    delay(200);
-    display_array[3][0] = 10;
-    display_array[4][0] = 10;
-    delay(200);
-    if (rtc_read(MONTH_ADDR, 3, 4) + up < 13 & rtc_read(MONTH_ADDR, 3, 4) + up > 0) {
-    rtc_write(MONTH_ADDR, up + rtc_read(MONTH_ADDR, 3, 4));
-    }
-    else {
-      up = 1;
-      rtc_write(MONTH_ADDR, up);
-    }
+    case WRITE_YEAR:
+      read_year.digits[2] = read_digit(YEAR_ADDR,1);
+      read_year.digits[3] = read_digit(YEAR_ADDR,0);
+      delay(500);
+      read_year.digits[2] = 10;
+      read_year.digits[3] = 10;
+      delay(500);
     break;
 
-    case WRITE_YEAR: //Set year
-    display_array[0][1] = 0;
-    display_array[1][1] = 0;
-    display_array[2][1] = 0;
-    display_array[3][1] = 0;
-    display_array[4][1] = 0;
-    display_array[1][0] = 2;
-    display_array[2][0] = 0;
-    delay(200);
-    display_array[0][0] = 10;
-    display_array[1][0] = 10;
-    display_array[2][0] = 10;
-    display_array[3][0] = 10;
-    display_array[4][0] = 10;
-    delay(200);
-    if (rtc_read(YEAR_ADDR, 3, 4) + up < 100) {
-    rtc_write(YEAR_ADDR, up + rtc_read(YEAR_ADDR, 3, 4));
-    }
-    else {
-      up = 0;
-      rtc_write(YEAR_ADDR, up);
-    }
+    case WRITE_ALARM1_HOUR:
+      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
+      delay(500);
+      read_alarm1.digits[0] = 10;
+      read_alarm1.digits[1] = 10;
+      delay(500);
     break;
 
-    default:
-      display_array[0][0] = 2;
-      display_array[1][0] = 1;
-      display_array[2][0] = 3;
-      display_array[3][0] = 7;
-      display_array[4][0] = 10;
-      display_array[0][1] = 0;
-      display_array[1][1] = 1;
-      display_array[2][1] = 0;
-      display_array[3][1] = 0;
-      display_array[4][1] = 0;
+    case WRITE_ALARM1_MINUTE:
+      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
+      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+      delay(500);
+      read_alarm1.digits[2] = 10;
+      read_alarm1.digits[3] = 10;
+      delay(500);
+    break;
+
+    case WRITE_ALARM1_SECOND:
+      read_alarm1.digits[4] = read_digit(AL1_HOUR_ADDR,1);
+      delay(500);
+      read_alarm1.digits[4] = 10;
+      delay(500);
+    break;
+
+    case WRITE_ALARM1_STATUS:
+    break;
+
+    case WRITE_ALARM2_HOUR:
+      read_alarm2.digits[0] = read_digit(AL2_HOUR_ADDR,1);
+      read_alarm2.digits[1] = read_digit(AL2_HOUR_ADDR,0);
+      delay(500);
+      read_alarm2.digits[0] = 10;
+      read_alarm2.digits[1] = 10;
+      delay(500);
+    break;
+
+    case WRITE_ALARM2_MINUTE:
+      read_alarm2.digits[2] = read_digit(AL2_MIN_ADDR,1);
+      read_alarm2.digits[3] = read_digit(AL2_MIN_ADDR,0);
+      delay(500);
+      read_alarm2.digits[2] = 10;
+      read_alarm2.digits[3] = 10;
+      delay(500);
+    break;
+
+    case WRITE_ALARM2_STATUS:
+    break;
   }
-
 }
 
 //Read data from RTC and insert digits to positions in display array
-uint8_t rtc_read(uint8_t address, uint8_t position1, uint8_t position2) {
+uint8_t rtc_read(uint8_t address) {
   uint8_t data_bcd;
-  uint8_t data_dec;
   Wire.beginTransmission(RTC_ADDR);
   Wire.write(address);
   Wire.endTransmission();
@@ -381,32 +348,45 @@ uint8_t rtc_read(uint8_t address, uint8_t position1, uint8_t position2) {
   if (Wire.available()) {
     data_bcd = Wire.read();
   }
-  data_dec = (data_bcd / 16 * 10) + (data_bcd % 16);  //Convert RTS's BCD format to decimal
-  display_array[position1][0] = data_dec / 10;      //Write most siginificant digit to position 1
-  if (position2 < DIGITS_COUNT) {
-  display_array[position2][0] = data_dec % 10;      //Write least siginificant digit to position 2
+  return data_bcd;
+}
+
+//Return single digit from byte recieved from RTC
+uint8_t read_digit(uint8_t address, bool byte_half) {
+  uint8_t digit = 0;
+  if (!byte_half) {
+    digit = rtc_read(address) & 0b00001111;
   }
-  return data_dec;
+  else {
+    digit = (rtc_read(address) >> 4) & 0b00000111;
+  }
+  if (digit < 10) {
+    return digit;
+  }
+  else return 0;
+}
+
+bool read_bit(uint8_t address, uint8_t bit_position) {
+  bool flag_bit = (rtc_read(address) >> bit_position) & 0x01;
+  return flag_bit;
 }
 
 //Write data to RTC
 void rtc_write(uint8_t address, uint8_t value) {
   Wire.beginTransmission(RTC_ADDR);
   Wire.write(address);
-  Wire.write((value / 10*16) + (value % 10));
+  Wire.write((value / 10*16) + (value % 10)); //Convert decimal to BCD
   Wire.endTransmission();
 }
 
 //Display array function
 void display_write() {
-  if (display_array[position][0] < 11) {
-    PORTB &=  0b00111000;                                 //Reset B pins
-    PORTD = digits_array[display_array[position][0]];     //Set segment configuration from digits_array look-up table
-    PORTD |= (display_array[position][1] << PD7);         //Add dot point bit status to current digit
-    PORTB |= position_array[position];                    //Add bit corresponding to position argument from position_array look-up table
-    position++;                                           //Move to next digit position
-    if (position == DIGITS_COUNT) {                       //Reset digit counter when last position is reached
+    PORTB &=  0b00111000;                                       //Reset B pins
+    PORTD = digits_array[display_ptr[menu]->digits[position]];  //Set segment configuration from digits_array look-up table
+    PORTD |= (display_ptr[menu]->dots[position] << PD7);        //Add dot point bit status to current digit
+    PORTB |= position_array[position];                          //Add bit corresponding to position argument from position_array look-up table
+    position++;                                                 //Move to next digit position
+    if (position == DIGITS_COUNT) {                             //Reset digit counter when last position is reached
       position = 0;                                 
     }
-  }
 }
