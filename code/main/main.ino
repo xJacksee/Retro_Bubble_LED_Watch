@@ -39,15 +39,16 @@ PC1 - UP switch
 #define AL1_SEC_ADDR    0x07
 #define AL1_MIN_ADDR    0x08
 #define AL1_HOUR_ADDR   0x09
-#define AL1_STATE_ADDR  0x0A
+#define AL1_DATE_ADDR   0x0A
 #define AL2_MIN_ADDR    0x0B
 #define AL2_HOUR_ADDR   0x0C
-#define AL2_STATE_ADDR  0x0D
+#define AL2_DATE_ADDR   0x0D
 #define CTRL_ADDR       0x0E
 #define STATUS_ADDR     0x0F
 
 //Function prototypes
 uint8_t rtc_read(uint8_t);
+uint8_t rtc_read_dec(uint8_t);
 uint8_t read_digit(uint8_t, bool);
 bool bit_read(uint8_t, uint8_t);
 void rtc_write(uint8_t, uint8_t);
@@ -91,7 +92,7 @@ display read_year = {{0,0,0,0,0}, {2, 0, 10, 10, 10}};
 display read_alarm1 = {{0,1,0,1,0}, {10, 10, 10, 10, 10}};
 display read_alarm1_status = {{0,0,0,0,0}, {10,10,11,13,13}};
 display read_alarm2 = {{0,1,0,1,0}, {10, 10, 10, 10, 0}};
-display read_alarm2_status = {{0,0,0,0,0}, {10,10,10,13,13}};
+display read_alarm2_status = {{0,0,0,0,0}, {10,10,11,13,13}};
 
 //Current position for display
 uint8_t position = 0;
@@ -101,9 +102,11 @@ volatile enum menu_list menu = READ_TIME;
 volatile bool write_mode = 0;
 //Digit up write value
 volatile uint8_t up = 0;
+//Blink period (ms)
+uint8_t t_blink = 450;
 
 //Menu structure pointer array
-display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status};
+display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status};
 //Position lookup table for PORT manipulation
 const uint8_t position_array[DIGITS_COUNT] = {0b00000001, 0b00000010, 0b00000100, 0b01000000, 0b10000000};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
@@ -218,119 +221,250 @@ void loop() {
     break;
     
     case READ_ALARM2:
-      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
-      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
-      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
-      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+      read_alarm2.digits[0] = read_digit(AL2_HOUR_ADDR,1);
+      read_alarm2.digits[1] = read_digit(AL2_HOUR_ADDR,0);
+      read_alarm2.digits[2] = read_digit(AL2_MIN_ADDR,1);
+      read_alarm2.digits[3] = read_digit(AL2_MIN_ADDR,0);
     break;
       
     case READ_ALARM2_STATUS:
     break;
 
     case WRITE_HOUR:
+      read_time.digits[2] = read_digit(MIN_ADDR,1);
+      read_time.digits[3] = read_digit(MIN_ADDR,0);
+      read_time.digits[4] = read_digit(SEC_ADDR,1);
+      if (rtc_read_dec(HOUR_ADDR) + up <= 23) {
+        rtc_write(HOUR_ADDR,rtc_read_dec(HOUR_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(HOUR_ADDR, 0);
+        up = 0;
+      }
       read_time.digits[0] = read_digit(HOUR_ADDR,1);
       read_time.digits[1] = read_digit(HOUR_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_time.digits[0] = 10;
       read_time.digits[1] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
 
     case WRITE_MINUTE:
+      read_time.digits[0] = read_digit(HOUR_ADDR,1);
+      read_time.digits[1] = read_digit(HOUR_ADDR,0);
+      read_time.digits[4] = read_digit(SEC_ADDR,1);
+      if (rtc_read_dec(MIN_ADDR) + up <= 59) {
+        rtc_write(MIN_ADDR,rtc_read_dec(MIN_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(MIN_ADDR, 0);
+        up = 0;
+      }
       read_time.digits[2] = read_digit(MIN_ADDR,1);
       read_time.digits[3] = read_digit(MIN_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_time.digits[2] = 10;
       read_time.digits[3] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_SECOND:
+      read_time.digits[0] = read_digit(HOUR_ADDR,1);
+      read_time.digits[1] = read_digit(HOUR_ADDR,0);
+      read_time.digits[2] = read_digit(MIN_ADDR,1);
+      read_time.digits[3] = read_digit(MIN_ADDR,0);
+      if (rtc_read_dec(SEC_ADDR) + up*10 <= 59) {
+        rtc_write(SEC_ADDR,rtc_read_dec(SEC_ADDR) + up*10);
+        up = 0;
+      }
+      else {
+        rtc_write(SEC_ADDR, 0);
+        up = 0;
+      }
       read_time.digits[4] = read_digit(SEC_ADDR,1);
-      delay(500);
+      delay(t_blink);
       read_time.digits[4] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_DAY:
+      read_date.digits[1] = read_digit(DATE_ADDR,1);
+      read_date.digits[2] = read_digit(DATE_ADDR,0);
+      read_date.digits[3] = read_digit(MONTH_ADDR,1);
+      read_date.digits[4] = read_digit(MONTH_ADDR,0);
+      if (rtc_read_dec(DAY_ADDR) + up <= 7) {
+        rtc_write(DAY_ADDR,rtc_read_dec(DAY_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(DAY_ADDR, 1);
+        up = 0;
+      }
       read_date.digits[0] = read_digit(DAY_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_date.digits[0] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_DATE:
+      read_date.digits[0] = read_digit(DAY_ADDR,0);
+      read_date.digits[3] = read_digit(MONTH_ADDR,1);
+      read_date.digits[4] = read_digit(MONTH_ADDR,0);
+      if (rtc_read_dec(DATE_ADDR) + up <= 31) {
+        rtc_write(DATE_ADDR,rtc_read_dec(DATE_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(DATE_ADDR, 1);
+        up = 0;
+      }
       read_date.digits[1] = read_digit(DATE_ADDR,1);
       read_date.digits[2] = read_digit(DATE_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_date.digits[1] = 10;
       read_date.digits[2] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_MONTH:
+      read_date.digits[0] = read_digit(DAY_ADDR,0);
+      read_date.digits[1] = read_digit(DATE_ADDR,1);
+      read_date.digits[2] = read_digit(DATE_ADDR,0);
+      if (rtc_read_dec(MONTH_ADDR) + up <= 12) {
+        rtc_write(MONTH_ADDR,rtc_read_dec(MONTH_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(MONTH_ADDR, 1);
+        up = 0;
+      }
       read_date.digits[3] = read_digit(MONTH_ADDR,1);
       read_date.digits[4] = read_digit(MONTH_ADDR,0);
-      delay(500);
-      read_time.digits[3] = 10;
-      read_time.digits[4] = 10;
-      delay(500);
+      delay(t_blink);
+      read_date.digits[3] = 10;
+      read_date.digits[4] = 10;
+      delay(t_blink);
     break;
 
     case WRITE_YEAR:
+      if (rtc_read_dec(YEAR_ADDR) + up <= 99) {
+        rtc_write(YEAR_ADDR,rtc_read_dec(YEAR_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(YEAR_ADDR, 0);
+        up = 0;
+      }
       read_year.digits[2] = read_digit(YEAR_ADDR,1);
       read_year.digits[3] = read_digit(YEAR_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_year.digits[2] = 10;
       read_year.digits[3] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM1_HOUR:
+      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
+      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+      read_alarm1.digits[4] = read_digit(AL1_SEC_ADDR,1);
+      if (rtc_read_dec(AL1_HOUR_ADDR) + up <= 23) {
+        rtc_write(AL1_HOUR_ADDR,rtc_read_dec(AL1_HOUR_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(AL1_HOUR_ADDR, 0);
+        up = 0;
+      }
       read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
       read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_alarm1.digits[0] = 10;
       read_alarm1.digits[1] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM1_MINUTE:
+      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
+      read_alarm1.digits[4] = read_digit(AL1_SEC_ADDR,1);
+      if (rtc_read_dec(AL1_MIN_ADDR) + up <= 59) {
+        rtc_write(AL1_MIN_ADDR,rtc_read_dec(AL1_MIN_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(AL1_MIN_ADDR, 0);
+        up = 0;
+      }
       read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
       read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_alarm1.digits[2] = 10;
       read_alarm1.digits[3] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM1_SECOND:
+      read_alarm1.digits[0] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL1_HOUR_ADDR,0);
+      read_alarm1.digits[2] = read_digit(AL1_MIN_ADDR,1);
+      read_alarm1.digits[3] = read_digit(AL1_MIN_ADDR,0);
+      if (rtc_read_dec(AL1_SEC_ADDR) + up*10 <= 59) {
+        rtc_write(AL1_SEC_ADDR,rtc_read_dec(AL1_SEC_ADDR) + up*10);
+        up = 0;
+      }
+      else {
+        rtc_write(AL1_SEC_ADDR, 0);
+        up = 0;
+      }
       read_alarm1.digits[4] = read_digit(AL1_HOUR_ADDR,1);
-      delay(500);
+      delay(t_blink);
       read_alarm1.digits[4] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM1_STATUS:
+      
     break;
 
     case WRITE_ALARM2_HOUR:
+      read_alarm2.digits[2] = read_digit(AL2_MIN_ADDR,1);
+      read_alarm2.digits[3] = read_digit(AL2_MIN_ADDR,0);
+      if (rtc_read_dec(AL2_HOUR_ADDR) + up <= 23) {
+        rtc_write(AL2_HOUR_ADDR,rtc_read_dec(AL2_HOUR_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(AL2_HOUR_ADDR, 0);
+        up = 0;
+      }
       read_alarm2.digits[0] = read_digit(AL2_HOUR_ADDR,1);
       read_alarm2.digits[1] = read_digit(AL2_HOUR_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_alarm2.digits[0] = 10;
       read_alarm2.digits[1] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM2_MINUTE:
+      read_alarm1.digits[0] = read_digit(AL2_HOUR_ADDR,1);
+      read_alarm1.digits[1] = read_digit(AL2_HOUR_ADDR,0);
+      if (rtc_read_dec(AL2_MIN_ADDR) + up <= 59) {
+        rtc_write(AL2_MIN_ADDR,rtc_read_dec(AL2_MIN_ADDR) + up);
+        up = 0;
+      }
+      else {
+        rtc_write(AL2_MIN_ADDR, 0);
+        up = 0;
+      }
       read_alarm2.digits[2] = read_digit(AL2_MIN_ADDR,1);
       read_alarm2.digits[3] = read_digit(AL2_MIN_ADDR,0);
-      delay(500);
+      delay(t_blink);
       read_alarm2.digits[2] = 10;
       read_alarm2.digits[3] = 10;
-      delay(500);
+      delay(t_blink);
     break;
 
     case WRITE_ALARM2_STATUS:
@@ -349,6 +483,20 @@ uint8_t rtc_read(uint8_t address) {
     data_bcd = Wire.read();
   }
   return data_bcd;
+}
+
+uint8_t rtc_read_dec(uint8_t address) {
+  uint8_t data_bcd;
+  uint8_t data_dec;
+  Wire.beginTransmission(RTC_ADDR);
+  Wire.write(address);
+  Wire.endTransmission();
+  Wire.requestFrom(RTC_ADDR,1);
+  if (Wire.available()) {
+    data_bcd = Wire.read();
+  }
+  data_dec = (data_bcd / 16 * 10) + (data_bcd % 16);
+  return data_dec;
 }
 
 //Return single digit from byte recieved from RTC
@@ -375,7 +523,7 @@ bool read_bit(uint8_t address, uint8_t bit_position) {
 void rtc_write(uint8_t address, uint8_t value) {
   Wire.beginTransmission(RTC_ADDR);
   Wire.write(address);
-  Wire.write((value / 10*16) + (value % 10)); //Convert decimal to BCD
+  Wire.write((value/10*16) + (value%10)); //Convert decimal to BCD
   Wire.endTransmission();
 }
 
