@@ -76,7 +76,8 @@ enum menu_list {
   WRITE_ALARM1_STATUS,
   WRITE_ALARM2_HOUR,
   WRITE_ALARM2_MINUTE,
-  WRITE_ALARM2_STATUS
+  WRITE_ALARM2_STATUS,
+  ALARM_TRIGGER
 };
 
 //Menu display structure definition
@@ -103,10 +104,12 @@ volatile bool write_mode = 0;
 //Digit up write value
 volatile uint8_t up = 0;
 //Blink period (ms)
-uint8_t t_blink = 450;
+const uint8_t t_blink = 450;
+//Sleep mode flag
+volatile bool sleep_flag = 0;
 
 //Menu structure pointer array
-display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status};
+const display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status};
 //Position lookup table for PORT manipulation
 const uint8_t position_array[DIGITS_COUNT] = {0b00000001, 0b00000010, 0b00000100, 0b01000000, 0b10000000};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
@@ -122,11 +125,17 @@ ISR(TIMER3_COMPA_vect) {
   TCCR3B = 0b00000000;  //Stop Timer 3
   TCNT3 = 0;            //Set Timer 3 value to 0
   write_mode = 1;       //Enable write mode flag
+  
   menu = WRITE_HOUR;    //Go to first write menu
 }
 
 //Interrupt service routine for MODE and UP switches
 ISR(PCINT1_vect) {
+  TCNT4 = 0;
+  if (sleep_flag) {
+    menu = READ_ALARM2_STATUS;
+  }
+  sleep_flag = 0;
   if (!(PINC & 0b00000001)) { //If MODE button was pressed (detect LOW state)
     TCCR3B = 0b00000011;      //Start Timer 3 with 64 prescaler
     menu = menu + 1;          //Cycle through menus
@@ -147,20 +156,34 @@ ISR(PCINT1_vect) {
   }
 }
 
+ISR(TIMER4_COMPA_vect) {
+  sleep_flag = 1;
+}
+
 void setup() {
+  //Set sleep mode register to Power-down mode and enable it
+  SMCR = 0b00000101;
+  
   //Set Timer 1 to interrupt and refresh screen periodacly
   TCCR1A  = 0b00000000; //No PWM functions
-  TCCR1B  = 0b00001001; //No prescaler, CTC for OCR1A
   TCNT1   = 0;          //Reset initial value
-  TIMSK1 |= 0b00000010; //Set interrupt on compare A
+  TCCR1B  = 0b00001001; //No prescaler, CTC for OCR1A
+  TIMSK1  = 0b00000010; //Set interrupt on compare A
   OCR1A   = 5000;       //Display new digit every 5ms
   
   //Set Timer 3 to count how long MODE button was pressed
   TCCR3A = 0b00000000;  //No PWM functions
   TCCR3B = 0b00000000;  //Keep Timer 3 initially disabled
   TCNT3 = 0;            //Reset initial value
-  TIMSK3 |= 0b00000010; //Set interrupt on compare A
-  OCR3A = 31250;        //Set 2s write mode trigger time (64 prescaler)
+  TIMSK3 = 0b00000010;  //Set interrupt on compare A
+  OCR3A = 31250;        //Set 2s write mode trigger time (64 prescaler set in ISR)
+
+  //Set Timer 4 to countdown time to enter sleep mode
+  TCCR4A = 0b00000000;  //No PWM functions
+  TCNT4 = 0;            //Reset initial value
+  TCCR4B = 0b00001011;  //Enable Timer 4 with 64 prescaler and CTC for OCR4A
+  TIMSK4 = 0b00000010;  //Set interrupt on compare A
+  OCR4A = 62500;        //Set 4s time to display before enabling power-down sleep
   
   //Set D and B pins as outputs for driving the display
   DDRD =  0b11111111;
@@ -186,6 +209,12 @@ void setup() {
 }
 
 void loop() {
+  if (sleep_flag) {
+    PORTB &=  0b00111000; //Disable all LED cathodes
+    PORTD =   0b00000000; //Disable all LED segments
+    sleep_mode();         //Enter sleep
+  }
+  
   switch(menu) {
     
     case READ_TIME:
@@ -218,6 +247,16 @@ void loop() {
     break;
 
     case READ_ALARM1_STATUS:
+      if (read_bit(AL1_DATE_ADDR,7)) {
+        read_alarm1_status.digits[2] = 10;
+        read_alarm1_status.digits[3] = 11;
+        read_alarm1_status.digits[4] = 12;
+      }
+      else {
+        read_alarm1_status.digits[2] = 11;
+        read_alarm1_status.digits[3] = 13;
+        read_alarm1_status.digits[4] = 13;
+      }
     break;
     
     case READ_ALARM2:
@@ -228,6 +267,16 @@ void loop() {
     break;
       
     case READ_ALARM2_STATUS:
+      if (read_bit(AL2_DATE_ADDR,7)) {
+        read_alarm2_status.digits[2] = 10;
+        read_alarm2_status.digits[3] = 11;
+        read_alarm2_status.digits[4] = 12;
+      }
+      else {
+        read_alarm2_status.digits[2] = 11;
+        read_alarm2_status.digits[3] = 13;
+        read_alarm2_status.digits[4] = 13;
+      }
     break;
 
     case WRITE_HOUR:
@@ -449,8 +498,8 @@ void loop() {
     break;
 
     case WRITE_ALARM2_MINUTE:
-      read_alarm1.digits[0] = read_digit(AL2_HOUR_ADDR,1);
-      read_alarm1.digits[1] = read_digit(AL2_HOUR_ADDR,0);
+      read_alarm2.digits[0] = read_digit(AL2_HOUR_ADDR,1);
+      read_alarm2.digits[1] = read_digit(AL2_HOUR_ADDR,0);
       if (rtc_read_dec(AL2_MIN_ADDR) + up <= 59) {
         rtc_write(AL2_MIN_ADDR,rtc_read_dec(AL2_MIN_ADDR) + up);
         up = 0;
@@ -469,6 +518,9 @@ void loop() {
 
     case WRITE_ALARM2_STATUS:
     break;
+
+    case ALARM_TRIGGER:
+    break;
   }
 }
 
@@ -486,16 +538,8 @@ uint8_t rtc_read(uint8_t address) {
 }
 
 uint8_t rtc_read_dec(uint8_t address) {
-  uint8_t data_bcd;
-  uint8_t data_dec;
-  Wire.beginTransmission(RTC_ADDR);
-  Wire.write(address);
-  Wire.endTransmission();
-  Wire.requestFrom(RTC_ADDR,1);
-  if (Wire.available()) {
-    data_bcd = Wire.read();
-  }
-  data_dec = (data_bcd / 16 * 10) + (data_bcd % 16);
+  uint8_t data_bcd = rtc_read(address);
+  uint8_t data_dec = (data_bcd / 16 * 10) + (data_bcd % 16);
   return data_dec;
 }
 
@@ -534,7 +578,7 @@ void display_write() {
     PORTD |= (display_ptr[menu]->dots[position] << PD7);        //Add dot point bit status to current digit
     PORTB |= position_array[position];                          //Add bit corresponding to position argument from position_array look-up table
     position++;                                                 //Move to next digit position
-    if (position == DIGITS_COUNT) {                             //Reset digit counter when last position is reached
+    if (position > DIGITS_COUNT - 1) {                             //Reset digit counter when last position is reached
       position = 0;                                 
     }
 }
