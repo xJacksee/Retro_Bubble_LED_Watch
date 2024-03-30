@@ -21,6 +21,8 @@ PC4 - SDA
 
 PC0 - MODE switch
 PC1 - UP switch
+
+PC2 - RTC alarm interrupt
 */
 #include <Wire.h> //Library needed for I2C communication with RTC module
 
@@ -109,7 +111,7 @@ const uint8_t t_blink = 450;
 volatile bool sleep_flag = 0;
 
 //Menu structure pointer array
-const display* display_ptr[WRITE_ALARM2_STATUS - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status};
+const display* display_ptr[ALARM_TRIGGER - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status, &read_time};
 //Position lookup table for PORT manipulation
 const uint8_t position_array[DIGITS_COUNT] = {0b00000001, 0b00000010, 0b00000100, 0b01000000, 0b10000000};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
@@ -125,20 +127,23 @@ ISR(TIMER3_COMPA_vect) {
   TCCR3B = 0b00000000;  //Stop Timer 3
   TCNT3 = 0;            //Set Timer 3 value to 0
   write_mode = 1;       //Enable write mode flag
-  
   menu = WRITE_HOUR;    //Go to first write menu
 }
 
 //Interrupt service routine for MODE and UP switches
 ISR(PCINT1_vect) {
-  TCNT4 = 0;
-  if (sleep_flag) {
-    menu = READ_ALARM2_STATUS;
+  TCNT4 = 0;                    //Reset sleep timer
+  if (sleep_flag & (PINC & 0b00000100)) {
+    menu = READ_TIME;  //Let the first menu to display after wake-up to be READ_TIME
   }
-  sleep_flag = 0;
-  if (!(PINC & 0b00000001)) { //If MODE button was pressed (detect LOW state)
+  if (!(PINC & 0b00000100)) { //If alarm was triggered
+    menu = ALARM_TRIGGER;
+  }
+  else if (!(PINC & 0b00000001)) { //If MODE button was pressed (detect LOW state)
     TCCR3B = 0b00000011;      //Start Timer 3 with 64 prescaler
-    menu = menu + 1;          //Cycle through menus
+    if (!sleep_flag) {
+      menu = menu + 1;          //Cycle through menus
+    }
     if (menu > READ_ALARM2_STATUS & !write_mode) {
       menu = READ_TIME;
     }
@@ -147,13 +152,15 @@ ISR(PCINT1_vect) {
       write_mode = 0;
     }
   }
-  else if (!(PINC & 0b00000010) & write_mode) { //If UP button was pressed (detect LOW state)
+  else if (!(PINC & 0b00000010) & write_mode & (menu != ALARM_TRIGGER)) { //If UP button was pressed (detect LOW state)
     up++; //Increment digit
   }
   else if (PINC & 0b00000001){ //If MODE button was depressed (detect HIGH state)
     TCCR3B = 0b00000000;  //Stop Timer 3
     TCNT3 = 0;            //Set Timer 3 value to 0
   }
+  PORTE = 0b00000000;
+  sleep_flag = 0;               //Disable sleep
 }
 
 ISR(TIMER4_COMPA_vect) {
@@ -169,7 +176,7 @@ void setup() {
   TCNT1   = 0;          //Reset initial value
   TCCR1B  = 0b00001001; //No prescaler, CTC for OCR1A
   TIMSK1  = 0b00000010; //Set interrupt on compare A
-  OCR1A   = 5000;       //Display new digit every 5ms
+  OCR1A   = 1000;       //Display new digit every 5ms
   
   //Set Timer 3 to count how long MODE button was pressed
   TCCR3A = 0b00000000;  //No PWM functions
@@ -190,19 +197,27 @@ void setup() {
   DDRB |= 0b11000111;
   
   //Set C pins as inputs for switches and enable pullup resistors
-  DDRC &= 0b11111100;
-  PORTC |= 0b00000011;
+  DDRC &= 0b11110000;
+  PORTC |= 0b00000111;
+
+  //Set pin in E port as an output for buzzer alarm
+  DDRE  = 0b00000001;
+  PORTE = 0b00000000;
   
   //Initialize Pin Chnage Interrupts
-  PCICR |= 0b00000010; //Enable PCI for bank C
-  PCIFR |= 0b00000111; //Clear interrupt flags
-  PCMSK1 |= 0b00000011; //Enable PCI for PC0 and PC1
+  PCICR |= 0b00000010;  //Enable PCI for bank C
+  PCIFR |= 0b00000111;  //Clear interrupt flags
+  PCMSK1 |= 0b00000111; //Enable PCI for PC0, PC1 and PC2
   
   //Initialize I2C communication library
   Wire.begin();
   
-  //Enable RTS's 2nd alarm interrupt
-  rtc_write(CTRL_ADDR, 0b00000100); 
+  //Set alrms to trigger when only time matches
+  rtc_write(AL1_DATE_ADDR, 0b10000001); 
+  rtc_write(AL2_DATE_ADDR, 0b10000001);
+
+  //Clear alaram flags
+  rtc_write(STATUS_ADDR, 0b00000000);
   
   //Enable external interrupts
   sei();
@@ -247,7 +262,7 @@ void loop() {
     break;
 
     case READ_ALARM1_STATUS:
-      if (read_bit(AL1_DATE_ADDR,7)) {
+      if (read_bit(CTRL_ADDR, 0)) {
         read_alarm1_status.digits[2] = 10;
         read_alarm1_status.digits[3] = 11;
         read_alarm1_status.digits[4] = 12;
@@ -267,7 +282,7 @@ void loop() {
     break;
       
     case READ_ALARM2_STATUS:
-      if (read_bit(AL2_DATE_ADDR,7)) {
+      if (read_bit(CTRL_ADDR, 1)) {
         read_alarm2_status.digits[2] = 10;
         read_alarm2_status.digits[3] = 11;
         read_alarm2_status.digits[4] = 12;
@@ -468,14 +483,33 @@ void loop() {
         rtc_write(AL1_SEC_ADDR, 0);
         up = 0;
       }
-      read_alarm1.digits[4] = read_digit(AL1_HOUR_ADDR,1);
+      read_alarm1.digits[4] = read_digit(AL1_SEC_ADDR,1);
       delay(t_blink);
       read_alarm1.digits[4] = 10;
       delay(t_blink);
     break;
 
     case WRITE_ALARM1_STATUS:
-      
+      rtc_write(STATUS_ADDR, 0b00000000);
+      if (up > 0) {
+        rtc_write(CTRL_ADDR, rtc_read(CTRL_ADDR) ^ 0b00000001);
+        up = 0;
+      }
+      if (read_bit(CTRL_ADDR, 0)) {
+        read_alarm1_status.digits[2] = 10;
+        read_alarm1_status.digits[3] = 11;
+        read_alarm1_status.digits[4] = 12;
+      }
+      else {
+        read_alarm1_status.digits[2] = 11;
+        read_alarm1_status.digits[3] = 13;
+        read_alarm1_status.digits[4] = 13;
+      }
+      delay(t_blink);
+      read_alarm1_status.digits[2] = 10;
+      read_alarm1_status.digits[3] = 10;
+      read_alarm1_status.digits[4] = 10;
+      delay(t_blink);
     break;
 
     case WRITE_ALARM2_HOUR:
@@ -517,14 +551,50 @@ void loop() {
     break;
 
     case WRITE_ALARM2_STATUS:
+      rtc_write(STATUS_ADDR, 0b00000000);
+      if (up > 0) {
+        rtc_write(CTRL_ADDR, rtc_read(CTRL_ADDR) ^ 0b00000010);
+        up = 0;
+      }
+      if (read_bit(CTRL_ADDR, 1)) {
+        read_alarm2_status.digits[2] = 10;
+        read_alarm2_status.digits[3] = 11;
+        read_alarm2_status.digits[4] = 12;
+      }
+      else {
+        read_alarm2_status.digits[2] = 11;
+        read_alarm2_status.digits[3] = 13;
+        read_alarm2_status.digits[4] = 13;
+      }
+      delay(t_blink);
+      read_alarm2_status.digits[2] = 10;
+      read_alarm2_status.digits[3] = 10;
+      read_alarm2_status.digits[4] = 10;
+      delay(t_blink);
     break;
 
     case ALARM_TRIGGER:
+      rtc_write(STATUS_ADDR, 0b00000000);
+      read_time.digits[0] = read_digit(HOUR_ADDR,1);
+      read_time.digits[1] = read_digit(HOUR_ADDR,0);
+      read_time.digits[2] = read_digit(MIN_ADDR,1);
+      read_time.digits[3] = read_digit(MIN_ADDR,0);
+      read_time.digits[4] = read_digit(SEC_ADDR,1);
+      PORTE = 0b00000001;
+      delay(t_blink);
+      TCNT4 = 0;
+      read_time.digits[0] = 10;
+      read_time.digits[1] = 10;
+      read_time.digits[2] = 10;
+      read_time.digits[3] = 10;
+      read_time.digits[4] = 10;
+      PORTE = 0b00000000;   
+      delay(t_blink);   
     break;
   }
 }
 
-//Read data from RTC and insert digits to positions in display array
+//Read data from RTC - BCD format
 uint8_t rtc_read(uint8_t address) {
   uint8_t data_bcd;
   Wire.beginTransmission(RTC_ADDR);
@@ -537,6 +607,7 @@ uint8_t rtc_read(uint8_t address) {
   return data_bcd;
 }
 
+//Read data from RTC - DEC format
 uint8_t rtc_read_dec(uint8_t address) {
   uint8_t data_bcd = rtc_read(address);
   uint8_t data_dec = (data_bcd / 16 * 10) + (data_bcd % 16);
@@ -558,6 +629,7 @@ uint8_t read_digit(uint8_t address, bool byte_half) {
   else return 0;
 }
 
+//Read single bit from RTC's register
 bool read_bit(uint8_t address, uint8_t bit_position) {
   bool flag_bit = (rtc_read(address) >> bit_position) & 0x01;
   return flag_bit;
@@ -578,7 +650,7 @@ void display_write() {
     PORTD |= (display_ptr[menu]->dots[position] << PD7);        //Add dot point bit status to current digit
     PORTB |= position_array[position];                          //Add bit corresponding to position argument from position_array look-up table
     position++;                                                 //Move to next digit position
-    if (position > DIGITS_COUNT - 1) {                             //Reset digit counter when last position is reached
+    if (position > DIGITS_COUNT - 1) {                          //Reset digit counter when last position is reached
       position = 0;                                 
     }
 }
