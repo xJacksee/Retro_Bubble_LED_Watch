@@ -216,7 +216,7 @@ void setup() {
   rtc_write(AL1_DATE_ADDR, 0b10000001); 
   rtc_write(AL2_DATE_ADDR, 0b10000001);
 
-  //Disable alarms by default and set ~INTA as only alarm pin
+  //Disable alarms by default and set ~INTA as only alarm pin (these are default values of RTC's register but have to be setup this way due to possible random changes after programming and startup)
   rtc_write(CTRL_ADDR, 0b00000000);
   
   //Clear alaram flags
