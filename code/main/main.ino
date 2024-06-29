@@ -130,10 +130,10 @@ ISR(TIMER3_COMPA_vect) {
   menu = WRITE_HOUR;    //Go to first write menu
 }
 
-//Interrupt service routine for MODE and UP switches
+//Interrupt service routine for MODE and UP switches + alarm
 ISR(PCINT1_vect) {
   TCNT4 = 0;                    //Reset sleep timer
-  if (sleep_flag & (PINC & 0b00000100)) {
+  if (sleep_flag) {
     menu = READ_TIME;  //Let the first menu to display after wake-up to be READ_TIME
   }
   if (!(PINC & 0b00000100)) { //If alarm was triggered
@@ -216,6 +216,9 @@ void setup() {
   rtc_write(AL1_DATE_ADDR, 0b10000001); 
   rtc_write(AL2_DATE_ADDR, 0b10000001);
 
+  //Disable alarms by default and set ~INTA as only alarm pin
+  rtc_write(CTRL_ADDR, 0b00000000);
+  
   //Clear alaram flags
   rtc_write(STATUS_ADDR, 0b00000000);
   
