@@ -9,8 +9,8 @@
     (date "2023-07-21")
     (rev "1.0")
     (company "Szymon Bartosik")
-    (comment 3 "All capacitors are 10% MLCC X5R type unless otherwise specified.")
-    (comment 4 "All resistors are 5% 0805 type unless otherwise specified.")
+    (comment 3 "All capacitors are 10% MLCC X5R  0603 type unless otherwise specified.")
+    (comment 4 "All resistors are 5% 0603 type unless otherwise specified.")
   )
 
   (lib_symbols
