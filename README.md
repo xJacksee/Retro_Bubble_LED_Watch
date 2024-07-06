@@ -1,5 +1,5 @@
 # Retro Bubble LED Watch
-Retro Bubble LED Watch is a project dedicated to infamous HP's bubble LED seven segment displays produced around 19070s. The goal of this project is to create fully functional retro watch from scratch (including code) based around modern components while the aforementioned display being the centerpiece.
+Retro Bubble LED Watch is a project dedicated to infamous HP's bubble LED seven segment displays produced around 1970s. The goal of this project is to create fully functional retro watch from scratch (including code) based around modern components while the aforementioned display being the centerpiece.
 
 
 ## Project's goal
