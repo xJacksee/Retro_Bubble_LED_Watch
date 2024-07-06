@@ -458,7 +458,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "../../models/Retro_Bubble_LED_Watch.step",
+      "step": "../../models/step/Retro_Bubble_LED_Watch_PCB.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
