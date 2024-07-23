@@ -1,5 +1,12 @@
-//Retro Bubble LED Watch
 /*
+***************************
+* Retro Bubble LED Watch  *
+* Revision: 1.0           *
+* Version: 1.0            *
+* Date: 20.07.2024        *
+* Szymon Bartosik         *
+***************************
+
 Wiring:
 PD0 - a
 PD1 - b
@@ -113,7 +120,7 @@ volatile bool sleep_flag = 0;
 //Menu structure pointer array
 const display* display_ptr[ALARM_TRIGGER - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status, &read_time};
 //Position lookup table for PORT manipulation
-const uint8_t position_array[DIGITS_COUNT] = {0b00000001, 0b00000010, 0b00000100, 0b01000000, 0b10000000};  //CA1,CA2,CA3,CA4,CA5
+const uint8_t position_array[DIGITS_COUNT] = {0b11000110, 0b11000101, 0b11000011, 0b10000111, 0b01000111};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
 const uint8_t digits_array[14] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111, 0b00000000, 0b01011100, 0b00110111, 0b01110001};  //0,1,2,3,4,5,6,7,8,9,null,o,n,f
 
@@ -228,9 +235,9 @@ void setup() {
 
 void loop() {
   if (sleep_flag) {
-    PORTB &=  0b00111000; //Disable all LED cathodes
-    PORTD =   0b00000000; //Disable all LED segments
-    sleep_mode();         //Enter sleep
+    PORTB =  0b11000111; //Disable all LED cathodes
+    PORTD =  0b00000000; //Disable all LED segments
+    sleep_mode();        //Enter sleep
   }
   
   switch(menu) {
@@ -648,10 +655,10 @@ void rtc_write(uint8_t address, uint8_t value) {
 
 //Display array function
 void display_write() {
-    PORTB &=  0b00111000;                                       //Reset B pins
+    PORTB =  0b11000111;                                        //Reset B pins
     PORTD = digits_array[display_ptr[menu]->digits[position]];  //Set segment configuration from digits_array look-up table
     PORTD |= (display_ptr[menu]->dots[position] << PD7);        //Add dot point bit status to current digit
-    PORTB |= position_array[position];                          //Add bit corresponding to position argument from position_array look-up table
+    PORTB = position_array[position];                           //Add bit corresponding to position argument from position_array look-up table
     position++;                                                 //Move to next digit position
     if (position > DIGITS_COUNT - 1) {                          //Reset digit counter when last position is reached
       position = 0;                                 
