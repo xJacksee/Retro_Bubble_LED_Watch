@@ -1,13 +1,23 @@
 /*
 ***************************
 * Retro Bubble LED Watch  *
-* Revision: 1.0           *
-* Version: 1.0            *
-* Date: 20.07.2024        *
+* Revision: 1.1           *
+* Version: 1.2            *
+* Date: 15.09.2024        *
 * Szymon Bartosik         *
 ***************************
 
+Description:
+
+Arduino Core: https://github.com/MCUdude/MiniCore
+Bootloader: None
+BOD: Disabled
+Clock: Internal RC clock at 1MHz (factory default)
+All other fuse/lock bits are set to factory defalult as stated in datasheet
+
 Wiring:
+
+Segments:
 PD0 - a
 PD1 - b
 PD2 - c
@@ -17,20 +27,30 @@ PD5 - f
 PD6 - g
 PD7 - dp
 
+Cathodes:
 PB0 - CA1 - position 0
 PB1 - CA2 - position 1
 PB2 - CA3 - position 2
 PB6 - CA4 - position 3
 PB7 - CA5 - position 4
 
+RTC I2C communication:
 PC5 - SCL
 PC4 - SDA
 
+Buttons:
 PC0 - MODE switch
 PC1 - UP switch
 
+RTC interrupts:
 PC2 - RTC alarm interrupt
+
+External components:
+PE0 - 20mm 4kHz piezo disc
+
+
 */
+#include <Arduino.h>
 #include <Wire.h> //Library needed for I2C communication with RTC module
 
 //Number of display's digits
@@ -55,7 +75,11 @@ PC2 - RTC alarm interrupt
 #define CTRL_ADDR       0x0E
 #define STATUS_ADDR     0x0F
 
+//Temperature sensor calibrated offset at room temperature (has to be calibrated for each chip indivudually; use this value as a reference)
+#define T_OFFSET        280
+
 //Function prototypes
+int temp_read();
 uint8_t rtc_read(uint8_t);
 uint8_t rtc_read_dec(uint8_t);
 uint8_t read_digit(uint8_t, bool);
@@ -68,6 +92,7 @@ enum menu_list {
   READ_TIME,
   READ_DATE,
   READ_YEAR,
+  READ_TEMP,
   READ_ALARM1,
   READ_ALARM1_STATUS,
   READ_ALARM2,
@@ -103,6 +128,7 @@ display read_alarm1 = {{0,1,0,1,0}, {10, 10, 10, 10, 10}};
 display read_alarm1_status = {{0,0,0,0,0}, {10,10,11,13,13}};
 display read_alarm2 = {{0,1,0,1,0}, {10, 10, 10, 10, 0}};
 display read_alarm2_status = {{0,0,0,0,0}, {10,10,11,13,13}};
+display read_temp = {{0,0,0,0,0}, {10,10,10,14,16}};
 
 //Current position for display
 uint8_t position = 0;
@@ -116,17 +142,21 @@ volatile uint8_t up = 0;
 const uint8_t t_blink = 450;
 //Sleep mode flag
 volatile bool sleep_flag = 0;
+//Temperature reading
+int T = 0;
 
 //Menu structure pointer array
-const display* display_ptr[ALARM_TRIGGER - READ_TIME + 1] = {&read_time, &read_date, &read_year, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status, &read_time};
+const display* display_ptr[] = {&read_time, &read_date, &read_year, &read_temp, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status, &read_time};
 //Position lookup table for PORT manipulation
-const uint8_t position_array[DIGITS_COUNT] = {0b11000110, 0b11000101, 0b11000011, 0b10000111, 0b01000111};  //CA1,CA2,CA3,CA4,CA5
+const uint8_t position_array[] = {0b11111110, 0b11111101, 0b11111011, 0b10111111, 0b01111111};  //CA1,CA2,CA3,CA4,CA5
 //Digit segment configuration for PORT manipulation
-const uint8_t digits_array[14] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111, 0b00000000, 0b01011100, 0b00110111, 0b01110001};  //0,1,2,3,4,5,6,7,8,9,null,o,n,f
+const uint8_t digits_array[] = {0b00111111, 0b00000110, 0b01011011, 0b01001111, 0b01100110, 0b01101101, 0b01111101, 0b00000111, 0b01111111, 0b01101111, 0b00000000, 0b01011100, 0b00110111, 0b01110001, 0b01100011, 0b01000000, 0b00111001};  //0,1,2,3,4,5,6,7,8,9,null,o,n,f,deg,-,C
 
 //Interrupt service routine for Timer 1 to regularly update display
 ISR(TIMER1_COMPA_vect) {
-  display_write();
+  if (!sleep_flag) {
+    display_write();
+  }
 }
 
 //Interrupt service routine for toggling write mode if MODE button was pressed for set time
@@ -141,7 +171,8 @@ ISR(TIMER3_COMPA_vect) {
 ISR(PCINT1_vect) {
   TCNT4 = 0;                    //Reset sleep timer
   if (sleep_flag) {
-    menu = READ_TIME;  //Let the first menu to display after wake-up to be READ_TIME
+    TCCR1B  = 0b00001001; //Enable display refreshing timer
+    menu = READ_TIME;     //Let the first menu to display after wake-up to be READ_TIME
   }
   if (!(PINC & 0b00000100)) { //If alarm was triggered
     menu = ALARM_TRIGGER;
@@ -170,6 +201,7 @@ ISR(PCINT1_vect) {
   sleep_flag = 0;               //Disable sleep
 }
 
+//Interrupt service routine for entering sleep mode
 ISR(TIMER4_COMPA_vect) {
   sleep_flag = 1;
 }
@@ -200,8 +232,8 @@ void setup() {
   OCR4A = 62500;        //Set 4s time to display before enabling power-down sleep
   
   //Set D and B pins as outputs for driving the display
-  DDRD =  0b11111111;
-  DDRB |= 0b11000111;
+  DDRD = 0b11111111;
+  DDRB = 0b11000111;
   
   //Set C pins as inputs for switches and enable pullup resistors
   DDRC &= 0b11110000;
@@ -209,7 +241,10 @@ void setup() {
 
   //Set pin in E port as an output for buzzer alarm
   DDRE  = 0b00000001;
-  PORTE = 0b00000000;
+  PORTE = 0b11111110;
+
+  //Setup ADC to measure internal temperature
+  ADMUX   = 0b11001000;  //Internal 1.1V reference and temperature sensor selected
   
   //Initialize Pin Chnage Interrupts
   PCICR |= 0b00000010;  //Enable PCI for bank C
@@ -235,9 +270,11 @@ void setup() {
 
 void loop() {
   if (sleep_flag) {
-    PORTB =  0b11000111; //Disable all LED cathodes
-    PORTD =  0b00000000; //Disable all LED segments
-    sleep_mode();        //Enter sleep
+    PORTE = 0b11111110;   //Pull buzzer pin low
+    ADCSRA  = 0b00000011; //Disable ADC
+    PORTD =  0b00000000;  //Disable all LED segments
+    PORTB =  0b00111000;  //Set cathodes to ground
+    sleep_mode();         //Enter sleep
   }
   
   switch(menu) {
@@ -261,6 +298,19 @@ void loop() {
     case READ_YEAR:
       read_year.digits[2] = read_digit(YEAR_ADDR,1);
       read_year.digits[3] = read_digit(YEAR_ADDR,0);
+    break;
+
+    case READ_TEMP:
+      T = temp_read();
+      if (T < 0)  {
+        read_temp.digits[0] = 15; //Write -
+      }
+      else {
+        read_temp.digits[0] = 10;
+      }
+
+      read_temp.digits[1] = (abs(T) - abs(T) % 10) / 10;
+      read_temp.digits[2] = abs(T) % 10;
     break;
       
     case READ_ALARM1:
@@ -323,7 +373,6 @@ void loop() {
       read_time.digits[1] = 10;
       delay(t_blink);
     break;
-
 
     case WRITE_MINUTE:
       read_time.digits[0] = read_digit(HOUR_ADDR,1);
@@ -584,23 +633,44 @@ void loop() {
     break;
 
     case ALARM_TRIGGER:
-      rtc_write(STATUS_ADDR, 0b00000000);
-      read_time.digits[0] = read_digit(HOUR_ADDR,1);
-      read_time.digits[1] = read_digit(HOUR_ADDR,0);
-      read_time.digits[2] = read_digit(MIN_ADDR,1);
-      read_time.digits[3] = read_digit(MIN_ADDR,0);
-      read_time.digits[4] = read_digit(SEC_ADDR,1);
-      PORTE = 0b00000001;
-      delay(t_blink);
-      TCNT4 = 0;
-      read_time.digits[0] = 10;
-      read_time.digits[1] = 10;
-      read_time.digits[2] = 10;
-      read_time.digits[3] = 10;
-      read_time.digits[4] = 10;
-      PORTE = 0b00000000;   
-      delay(t_blink);   
+      rtc_write(STATUS_ADDR, 0b00000000); //Reset alarm flag in RTC
+      unsigned int i = 0; //Alarm trigger blink repetitions
+      while (i < 30) {
+        read_time.digits[0] = read_digit(HOUR_ADDR,1);
+        read_time.digits[1] = read_digit(HOUR_ADDR,0);
+        read_time.digits[2] = read_digit(MIN_ADDR,1);
+        read_time.digits[3] = read_digit(MIN_ADDR,0);
+        read_time.digits[4] = read_digit(SEC_ADDR,1);
+        PORTE = 0b11111110;
+        delay(t_blink); 
+        TCNT4 = 0;
+        read_time.digits[0] = 10;
+        read_time.digits[1] = 10;
+        read_time.digits[2] = 10;
+        read_time.digits[3] = 10;
+        read_time.digits[4] = 10; 
+        PORTE = 0b11111111;  
+        delay(t_blink); 
+        i++;  
+      }
+      PORTE = 0b11111110;
+      sleep_flag = 1;
     break;
+  }
+}
+
+//Read chip temperature
+int temp_read() {
+  ADCSRA = 0b11000011;          //Enable ADC, start conversion, disable auto trigger and interrupts disabled, set prescaler to 2
+  while (ADCSRA & 0b01000000);  //Wait for conversion to complete
+  unsigned int temp_raw = ADCL;
+  temp_raw |= (ADCH<<8);
+  int temp_real = temp_raw - T_OFFSET;
+  if ((temp_real > -100) && (temp_real < 100)) {
+    return temp_real;
+  }
+  else {
+    return 0;
   }
 }
 
@@ -655,7 +725,7 @@ void rtc_write(uint8_t address, uint8_t value) {
 
 //Display array function
 void display_write() {
-    PORTB =  0b11000111;                                        //Reset B pins
+    PORTB =  0b11111111;                                        //Reset B pins (reverse bias)
     PORTD = digits_array[display_ptr[menu]->digits[position]];  //Set segment configuration from digits_array look-up table
     PORTD |= (display_ptr[menu]->dots[position] << PD7);        //Add dot point bit status to current digit
     PORTB = position_array[position];                           //Add bit corresponding to position argument from position_array look-up table
