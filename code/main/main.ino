@@ -139,11 +139,13 @@ volatile bool write_mode = 0;
 //Digit up write value
 volatile uint8_t up = 0;
 //Blink period (ms)
-const uint8_t t_blink = 450;
+uint8_t t_blink = 450;
 //Sleep mode flag
 volatile bool sleep_flag = 0;
 //Temperature reading
 int T = 0;
+//Refresh time value for timer 1
+const uint16_t t_ref[] = {1000, 31250};
 
 //Menu structure pointer array
 const display* display_ptr[] = {&read_time, &read_date, &read_year, &read_temp, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2_status, &read_time, &read_time, &read_time, &read_date, &read_date, &read_date, &read_year, &read_alarm1, &read_alarm1, &read_alarm1, &read_alarm1_status, &read_alarm2, &read_alarm2, &read_alarm2_status, &read_time};
@@ -171,6 +173,7 @@ ISR(TIMER3_COMPA_vect) {
 ISR(PCINT1_vect) {
   TCNT4 = 0;                    //Reset sleep timer
   if (sleep_flag) {
+    OCR1A = t_ref[0];
     TCCR1B  = 0b00001001; //Enable display refreshing timer
     menu = READ_TIME;     //Let the first menu to display after wake-up to be READ_TIME
   }
@@ -192,6 +195,10 @@ ISR(PCINT1_vect) {
   }
   else if (!(PINC & 0b00000010) & write_mode & (menu != ALARM_TRIGGER)) { //If UP button was pressed (detect LOW state)
     up++; //Increment digit
+  }
+  else if (!(PINC & 0b00000010) & !write_mode & (menu != ALARM_TRIGGER)) { //If UP button was pressed (detect LOW state)
+    TCCR1B  = 0b00001010; //Set prescaler to 8
+    OCR1A = t_ref[1];     //Set refresh period to 250ms
   }
   else if (PINC & 0b00000001){ //If MODE button was depressed (detect HIGH state)
     TCCR3B = 0b00000000;  //Stop Timer 3
@@ -215,7 +222,7 @@ void setup() {
   TCNT1   = 0;          //Reset initial value
   TCCR1B  = 0b00001001; //No prescaler, CTC for OCR1A
   TIMSK1  = 0b00000010; //Set interrupt on compare A
-  OCR1A   = 1000;       //Display new digit every 5ms
+  OCR1A   = t_ref[0];   //Display new digit every 1ms
   
   //Set Timer 3 to count how long MODE button was pressed
   TCCR3A = 0b00000000;  //No PWM functions
