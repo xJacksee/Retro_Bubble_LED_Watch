@@ -1,0 +1,6 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "5082-7415")(type "KiCad")(uri "${KIPRJMOD}/lib/symbols/5082-7415.kicad_sym")(options "")(descr ""))
+  (lib (name "DS1337S_")(type "KiCad")(uri "${KIPRJMOD}/lib/symbols/DS1337S_.kicad_sym")(options "")(descr ""))
+  (lib (name "LFXTAL016178Reel")(type "KiCad")(uri "${KIPRJMOD}/lib/symbols/LFXTAL016178Reel.kicad_sym")(options "")(descr ""))
+)

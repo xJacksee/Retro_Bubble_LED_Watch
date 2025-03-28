@@ -2,7 +2,7 @@
 <export version="E">
   <design>
     <source>C:\Users\Szymon\Documents\Projects_Repository\Retro_Bubble_LED_Watch\kicad\Retro_Bubble_LED_Watch\Retro_Bubble_LED_Watch.kicad_sch</source>
-    <date>15/10/2024 12:57:53</date>
+    <date>28/03/2025 01:07:07</date>
     <tool>Eeschema 7.0.10</tool>
     <sheet number="1" name="/" tstamps="/">
       <title_block>
@@ -29,12 +29,12 @@
       <footprint>Battery:BatteryHolder_Keystone_1060_1x2032</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">CR2032/BN</field>
+        <field name="Part Number">CR2032/BN</field>
         <field name="Socket ">KEYSTONE 1060</field>
       </fields>
       <libsource lib="Device" part="Battery_Cell" description="Single-cell battery"/>
+      <property name="Part Number" value="CR2032/BN"/>
       <property name="Manufacturer" value="PANASONIC"/>
-      <property name="Model" value="CR2032/BN"/>
       <property name="Socket " value="KEYSTONE 1060"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
@@ -48,11 +48,13 @@
       <footprint>Capacitor_SMD:C_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">SAMSUNG</field>
-        <field name="Model">CL10B104KA8NFNC</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">CL10B104KA8NFNC</field>
       </fields>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
-      <property name="Model" value="CL10B104KA8NFNC"/>
+      <property name="Part Number" value="CL10B104KA8NFNC"/>
       <property name="Manufacturer" value="SAMSUNG"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -65,11 +67,14 @@
       <footprint>Capacitor_SMD:C_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">SAMSUNG</field>
-        <field name="Model">CL10B104KA8NFNC</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">CL10B104KA8NFNC</field>
       </fields>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
-      <property name="Model" value="CL10B104KA8NFNC"/>
+      <property name="Model" value=""/>
+      <property name="Part Number" value="CL10B104KA8NFNC"/>
       <property name="Manufacturer" value="SAMSUNG"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -82,11 +87,13 @@
       <footprint>Capacitor_SMD:C_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">SAMSUNG</field>
-        <field name="Model">CL10B104KA8NFNC</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">CL10B104KA8NFNC</field>
       </fields>
       <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
-      <property name="Model" value="CL10B104KA8NFNC"/>
+      <property name="Part Number" value="CL10B104KA8NFNC"/>
       <property name="Manufacturer" value="SAMSUNG"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Unpolarized capacitor"/>
@@ -99,11 +106,15 @@
       <footprint>Package_DIP:DIP-14_W8.89mm_SMDSocket_LongPads</footprint>
       <fields>
         <field name="Manufacturer">HP</field>
+        <field name="Package">DIP-14</field>
+        <field name="Part Number">5082-7415</field>
         <field name="Socket">CONNFLY DS1001-02-14N13</field>
       </fields>
       <libsource lib="5082-7415" part="5082-7415" description="HP Bubble LED Segmented Display"/>
       <property name="Manufacturer" value="HP"/>
       <property name="Socket" value="CONNFLY DS1001-02-14N13"/>
+      <property name="Package" value="DIP-14"/>
+      <property name="Part Number" value="5082-7415"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="HP Bubble LED Segmented Display"/>
@@ -112,12 +123,14 @@
       <tstamps>75752734-ce9d-4e6a-8ac6-bc332ee0b626</tstamps>
     </comp>
     <comp ref="J1">
-      <value>20021111-00006T4LF</value>
+      <value>2x3 Goldpin Header</value>
       <footprint>Connector_PinHeader_1.27mm:PinHeader_2x03_P1.27mm_Vertical</footprint>
       <fields>
         <field name="Manufacturer">AMPHENOL COMMUNICATIONS SOLUTIONS</field>
+        <field name="Part Number">20021111-00006T4LF</field>
       </fields>
       <libsource lib="Connector_Generic" part="Conn_02x03_Counter_Clockwise" description="Generic connector, double row, 02x03, counter clockwise pin numbering scheme (similar to DIP package numbering), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Part Number" value="20021111-00006T4LF"/>
       <property name="Manufacturer" value="AMPHENOL COMMUNICATIONS SOLUTIONS"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
@@ -126,27 +139,18 @@
       <sheetpath names="/" tstamps="/"/>
       <tstamps>6340e707-c795-4cca-837b-48f1e15cc6d0</tstamps>
     </comp>
-    <comp ref="J2">
-      <value>Pad Connector</value>
-      <footprint>footprints:Pad_Conn_2x1_2x1mm_2.54mm</footprint>
-      <libsource lib="Connector_Generic" part="Conn_01x02" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
-      <property name="Sheetname" value=""/>
-      <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
-      <property name="ki_description" value="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
-      <property name="ki_keywords" value="connector"/>
-      <sheetpath names="/" tstamps="/"/>
-      <tstamps>2b72e002-0136-41f8-bdab-6354cd0e8bab</tstamps>
-    </comp>
     <comp ref="R1">
       <value>330R</value>
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -159,11 +163,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -176,11 +182,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -193,11 +201,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -210,11 +220,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -227,11 +239,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -244,11 +258,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -261,11 +277,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF3300V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF3300V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF3300V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF3300V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -278,11 +296,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF1002V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF1002V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF1002V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF1002V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -295,11 +315,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF1002V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF1002V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF1002V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Part Number" value="ERJ3EKF1002V"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -312,11 +334,13 @@
       <footprint>Resistor_SMD:R_0603_1608Metric</footprint>
       <fields>
         <field name="Manufacturer">PANASONIC</field>
-        <field name="Model">ERJ3EKF1002V</field>
+        <field name="Package">0603</field>
+        <field name="Part Number">ERJ3EKF1002V</field>
       </fields>
       <libsource lib="Device" part="R" description="Resistor"/>
-      <property name="Model" value="ERJ3EKF1002V"/>
+      <property name="Part Number" value="ERJ3EKF1002V"/>
       <property name="Manufacturer" value="PANASONIC"/>
+      <property name="Package" value="0603"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Resistor"/>
@@ -325,14 +349,14 @@
       <tstamps>bf8b77b9-d18c-4505-b9b9-4edc2a55d2e9</tstamps>
     </comp>
     <comp ref="SW1">
-      <value>KMS231G</value>
+      <value>Microswitch</value>
       <footprint>Button_Switch_SMD:SW_SPST_CK_KMS2xxG</footprint>
       <fields>
         <field name="Manufacturer">C&amp;K</field>
-        <field name="Model">KMS231GLFS</field>
+        <field name="Part Number">KMS231GLFS</field>
       </fields>
       <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
-      <property name="Model" value="KMS231GLFS"/>
+      <property name="Part Number" value="KMS231GLFS"/>
       <property name="Manufacturer" value="C&amp;K"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
@@ -342,15 +366,15 @@
       <tstamps>6ba2e8a9-27e9-490f-ba50-46559bccd951</tstamps>
     </comp>
     <comp ref="SW2">
-      <value>KMS231G</value>
+      <value>Microswitch</value>
       <footprint>Button_Switch_SMD:SW_SPST_CK_KMS2xxG</footprint>
       <fields>
         <field name="Manufacturer">C&amp;K</field>
-        <field name="Model">KMS231GLFS</field>
+        <field name="Part Number">KMS231GLFS</field>
       </fields>
       <libsource lib="Switch" part="SW_Push" description="Push button switch, generic, two pins"/>
-      <property name="Model" value="KMS231GLFS"/>
       <property name="Manufacturer" value="C&amp;K"/>
+      <property name="Part Number" value="KMS231GLFS"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="Push button switch, generic, two pins"/>
@@ -364,9 +388,11 @@
       <datasheet>http://ww1.microchip.com/downloads/en/DeviceDoc/40001906C.pdf</datasheet>
       <fields>
         <field name="Manufacturer">MICROCHIP</field>
+        <field name="Package">TQFP-32</field>
       </fields>
       <libsource lib="MCU_Microchip_ATmega" part="ATmega328PB-A" description="20MHz, 32kB Flash, 2kB SRAM, 1kB EEPROM, TQFP-32"/>
       <property name="Manufacturer" value="MICROCHIP"/>
+      <property name="Package" value="TQFP-32"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <property name="ki_description" value="20MHz, 32kB Flash, 2kB SRAM, 1kB EEPROM, TQFP-32"/>
@@ -379,22 +405,26 @@
       <footprint>footprints:SOIC127P600X175-8N</footprint>
       <fields>
         <field name="Manufacturer">MAXIM INTEGRATED</field>
+        <field name="Package">SOIC-8</field>
       </fields>
       <libsource lib="DS1337S+" part="DS1337S+" description=""/>
       <property name="Manufacturer" value="MAXIM INTEGRATED"/>
+      <property name="Package" value="SOIC-8"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
       <tstamps>977c94be-e619-4881-bca4-e8cf9c3d53d6</tstamps>
     </comp>
     <comp ref="XTAL1">
-      <value>LFXTAL016178Reel</value>
+      <value>32.678 kHz</value>
       <footprint>footprints:LFXTAL016178Reel</footprint>
       <fields>
         <field name="Manufacturer">IQD FREQUENCY PRODUCTS</field>
+        <field name="Part Number">LFXTAL016178</field>
       </fields>
       <libsource lib="LFXTAL016178Reel" part="LFXTAL016178Reel" description=""/>
       <property name="Manufacturer" value="IQD FREQUENCY PRODUCTS"/>
+      <property name="Part Number" value="LFXTAL016178"/>
       <property name="Sheetname" value=""/>
       <property name="Sheetfile" value="Retro_Bubble_LED_Watch.kicad_sch"/>
       <sheetpath names="/" tstamps="/"/>
@@ -621,7 +651,7 @@
     </library>
   </libraries>
   <nets>
-    <net code="1" name="+BATT">
+    <net code="2" name="+BATT">
       <node ref="BT1" pin="1" pinfunction="+" pintype="passive"/>
       <node ref="C1" pin="1" pintype="passive"/>
       <node ref="C2" pin="1" pintype="passive"/>
@@ -633,180 +663,178 @@
       <node ref="U1" pin="4" pinfunction="VCC" pintype="power_in"/>
       <node ref="U2" pin="8" pinfunction="VCC" pintype="power_in"/>
     </net>
-    <net code="2" name="/MISO">
+    <net code="3" name="/ISP.MISO">
       <node ref="J1" pin="6" pinfunction="Pin_6" pintype="passive"/>
       <node ref="U1" pin="16" pinfunction="PB4" pintype="bidirectional"/>
     </net>
-    <net code="3" name="/MODE_BUTTON">
-      <node ref="SW1" pin="1" pinfunction="1" pintype="passive"/>
-      <node ref="U1" pin="23" pinfunction="PC0" pintype="bidirectional"/>
-    </net>
-    <net code="4" name="/MOSI">
+    <net code="4" name="/ISP.MOSI">
       <node ref="J1" pin="3" pinfunction="Pin_3" pintype="passive"/>
       <node ref="U1" pin="15" pinfunction="PB3" pintype="bidirectional"/>
     </net>
-    <net code="5" name="/SCK">
+    <net code="5" name="/ISP.SCK">
       <node ref="J1" pin="4" pinfunction="Pin_4" pintype="passive"/>
       <node ref="U1" pin="17" pinfunction="PB5" pintype="bidirectional"/>
     </net>
-    <net code="6" name="/SCL">
-      <node ref="R10" pin="2" pintype="passive"/>
-      <node ref="U1" pin="28" pinfunction="PC5" pintype="bidirectional"/>
-      <node ref="U2" pin="6" pinfunction="SCL" pintype="input"/>
-    </net>
-    <net code="7" name="/SDA">
-      <node ref="R9" pin="2" pintype="passive"/>
-      <node ref="U1" pin="27" pinfunction="PC4" pintype="bidirectional"/>
-      <node ref="U2" pin="5" pinfunction="SDA" pintype="bidirectional"/>
-    </net>
-    <net code="8" name="/UP_BUTTON">
-      <node ref="SW2" pin="1" pinfunction="1" pintype="passive"/>
-      <node ref="U1" pin="24" pinfunction="PC1" pintype="bidirectional"/>
-    </net>
-    <net code="9" name="/~{INTA}">
-      <node ref="U1" pin="25" pinfunction="PC2" pintype="bidirectional"/>
-      <node ref="U2" pin="3" pinfunction="~{INTA}" pintype="output"/>
-    </net>
-    <net code="10" name="/~{RESET}">
+    <net code="6" name="/ISP.~{RESET}">
       <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
       <node ref="R11" pin="2" pintype="passive"/>
       <node ref="U1" pin="29" pinfunction="~{RESET}/PC6" pintype="bidirectional"/>
     </net>
-    <net code="11" name="GND">
+    <net code="8" name="/RTC.SCL">
+      <node ref="R10" pin="2" pintype="passive"/>
+      <node ref="U1" pin="28" pinfunction="PC5" pintype="bidirectional"/>
+      <node ref="U2" pin="6" pinfunction="SCL" pintype="input"/>
+    </net>
+    <net code="9" name="/RTC.SDA">
+      <node ref="R9" pin="2" pintype="passive"/>
+      <node ref="U1" pin="27" pinfunction="PC4" pintype="bidirectional"/>
+      <node ref="U2" pin="5" pinfunction="SDA" pintype="bidirectional"/>
+    </net>
+    <net code="10" name="/RTC.~{INTA}">
+      <node ref="U1" pin="25" pinfunction="PC2" pintype="bidirectional"/>
+      <node ref="U2" pin="3" pinfunction="~{INTA}" pintype="output"/>
+    </net>
+    <net code="12" name="/cathode.CA1">
+      <node ref="DS1" pin="1" pinfunction="CA1" pintype="input"/>
+      <node ref="U1" pin="12" pinfunction="PB0" pintype="bidirectional"/>
+    </net>
+    <net code="13" name="/cathode.CA2">
+      <node ref="DS1" pin="13" pinfunction="CA2" pintype="input"/>
+      <node ref="U1" pin="13" pinfunction="PB1" pintype="bidirectional"/>
+    </net>
+    <net code="14" name="/cathode.CA3">
+      <node ref="DS1" pin="4" pinfunction="CA3" pintype="input"/>
+      <node ref="U1" pin="14" pinfunction="PB2" pintype="bidirectional"/>
+    </net>
+    <net code="15" name="/cathode.CA4">
+      <node ref="DS1" pin="9" pinfunction="CA4" pintype="input"/>
+      <node ref="U1" pin="7" pinfunction="XTAL1/PB6" pintype="bidirectional"/>
+    </net>
+    <net code="16" name="/cathode.CA5">
+      <node ref="DS1" pin="7" pinfunction="CA5" pintype="input"/>
+      <node ref="U1" pin="8" pinfunction="XTAL2/PB7" pintype="bidirectional"/>
+    </net>
+    <net code="18" name="/segment.a">
+      <node ref="R1" pin="1" pintype="passive"/>
+      <node ref="U1" pin="30" pinfunction="PD0" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="/segment.b">
+      <node ref="R2" pin="1" pintype="passive"/>
+      <node ref="U1" pin="31" pinfunction="PD1" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="/segment.c">
+      <node ref="R3" pin="1" pintype="passive"/>
+      <node ref="U1" pin="32" pinfunction="PD2" pintype="bidirectional"/>
+    </net>
+    <net code="21" name="/segment.d">
+      <node ref="R4" pin="1" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="PD3" pintype="bidirectional"/>
+    </net>
+    <net code="22" name="/segment.dp">
+      <node ref="R8" pin="1" pintype="passive"/>
+      <node ref="U1" pin="11" pinfunction="PD7" pintype="bidirectional"/>
+    </net>
+    <net code="23" name="/segment.e">
+      <node ref="R5" pin="1" pintype="passive"/>
+      <node ref="U1" pin="2" pinfunction="PD4" pintype="bidirectional"/>
+    </net>
+    <net code="24" name="/segment.f">
+      <node ref="R6" pin="1" pintype="passive"/>
+      <node ref="U1" pin="9" pinfunction="PD5" pintype="bidirectional"/>
+    </net>
+    <net code="25" name="/segment.g">
+      <node ref="R7" pin="1" pintype="passive"/>
+      <node ref="U1" pin="10" pinfunction="PD6" pintype="bidirectional"/>
+    </net>
+    <net code="27" name="GND">
       <node ref="BT1" pin="2" pinfunction="-" pintype="passive"/>
       <node ref="C1" pin="2" pintype="passive"/>
       <node ref="C2" pin="2" pintype="passive"/>
       <node ref="C3" pin="2" pintype="passive"/>
       <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive"/>
-      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
       <node ref="SW1" pin="2" pinfunction="2" pintype="passive"/>
       <node ref="SW2" pin="2" pinfunction="2" pintype="passive"/>
       <node ref="U1" pin="21" pinfunction="GND" pintype="passive"/>
       <node ref="U1" pin="5" pinfunction="GND" pintype="power_in"/>
       <node ref="U2" pin="4" pinfunction="GND" pintype="power_in"/>
     </net>
-    <net code="12" name="Net-(DS1-CA1)">
-      <node ref="DS1" pin="1" pinfunction="CA1" pintype="input"/>
-      <node ref="U1" pin="12" pinfunction="PB0" pintype="bidirectional"/>
-    </net>
-    <net code="13" name="Net-(DS1-CA2)">
-      <node ref="DS1" pin="13" pinfunction="CA2" pintype="input"/>
-      <node ref="U1" pin="13" pinfunction="PB1" pintype="bidirectional"/>
-    </net>
-    <net code="14" name="Net-(DS1-CA3)">
-      <node ref="DS1" pin="4" pinfunction="CA3" pintype="input"/>
-      <node ref="U1" pin="14" pinfunction="PB2" pintype="bidirectional"/>
-    </net>
-    <net code="15" name="Net-(DS1-CA4)">
-      <node ref="DS1" pin="9" pinfunction="CA4" pintype="input"/>
-      <node ref="U1" pin="7" pinfunction="XTAL1/PB6" pintype="bidirectional"/>
-    </net>
-    <net code="16" name="Net-(DS1-CA5)">
-      <node ref="DS1" pin="7" pinfunction="CA5" pintype="input"/>
-      <node ref="U1" pin="8" pinfunction="XTAL2/PB7" pintype="bidirectional"/>
-    </net>
-    <net code="17" name="Net-(DS1-DP)">
+    <net code="28" name="Net-(DS1-DP)">
       <node ref="DS1" pin="5" pinfunction="DP" pintype="input"/>
       <node ref="R8" pin="2" pintype="passive"/>
     </net>
-    <net code="18" name="Net-(DS1-a)">
+    <net code="29" name="Net-(DS1-a)">
       <node ref="DS1" pin="14" pinfunction="a" pintype="input"/>
       <node ref="R1" pin="2" pintype="passive"/>
     </net>
-    <net code="19" name="Net-(DS1-b)">
+    <net code="30" name="Net-(DS1-b)">
       <node ref="DS1" pin="12" pinfunction="b" pintype="input"/>
       <node ref="R2" pin="2" pintype="passive"/>
     </net>
-    <net code="20" name="Net-(DS1-c)">
+    <net code="31" name="Net-(DS1-c)">
       <node ref="DS1" pin="3" pinfunction="c" pintype="input"/>
       <node ref="R3" pin="2" pintype="passive"/>
     </net>
-    <net code="21" name="Net-(DS1-d)">
+    <net code="32" name="Net-(DS1-d)">
       <node ref="DS1" pin="6" pinfunction="d" pintype="input"/>
       <node ref="R4" pin="2" pintype="passive"/>
     </net>
-    <net code="22" name="Net-(DS1-e)">
+    <net code="33" name="Net-(DS1-e)">
       <node ref="DS1" pin="2" pinfunction="e" pintype="input"/>
       <node ref="R5" pin="2" pintype="passive"/>
     </net>
-    <net code="23" name="Net-(DS1-f)">
+    <net code="34" name="Net-(DS1-f)">
       <node ref="DS1" pin="10" pinfunction="f" pintype="input"/>
       <node ref="R6" pin="2" pintype="passive"/>
     </net>
-    <net code="24" name="Net-(DS1-g)">
+    <net code="35" name="Net-(DS1-g)">
       <node ref="DS1" pin="8" pinfunction="g" pintype="input"/>
       <node ref="R7" pin="2" pintype="passive"/>
     </net>
-    <net code="25" name="Net-(J2-Pin_2)">
-      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    <net code="36" name="Net-(J2-Pin_2)">
       <node ref="U1" pin="3" pinfunction="PE0" pintype="bidirectional"/>
     </net>
-    <net code="26" name="Net-(U1-AREF)">
+    <net code="37" name="Net-(U1-AREF)">
       <node ref="C3" pin="1" pintype="passive"/>
       <node ref="U1" pin="20" pinfunction="AREF" pintype="passive"/>
     </net>
-    <net code="27" name="Net-(U1-PD0)">
-      <node ref="R1" pin="1" pintype="passive"/>
-      <node ref="U1" pin="30" pinfunction="PD0" pintype="bidirectional"/>
+    <net code="38" name="Net-(U1-PC0)">
+      <node ref="SW1" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="23" pinfunction="PC0" pintype="bidirectional"/>
     </net>
-    <net code="28" name="Net-(U1-PD1)">
-      <node ref="R2" pin="1" pintype="passive"/>
-      <node ref="U1" pin="31" pinfunction="PD1" pintype="bidirectional"/>
+    <net code="39" name="Net-(U1-PC1)">
+      <node ref="SW2" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="24" pinfunction="PC1" pintype="bidirectional"/>
     </net>
-    <net code="29" name="Net-(U1-PD2)">
-      <node ref="R3" pin="1" pintype="passive"/>
-      <node ref="U1" pin="32" pinfunction="PD2" pintype="bidirectional"/>
-    </net>
-    <net code="30" name="Net-(U1-PD3)">
-      <node ref="R4" pin="1" pintype="passive"/>
-      <node ref="U1" pin="1" pinfunction="PD3" pintype="bidirectional"/>
-    </net>
-    <net code="31" name="Net-(U1-PD4)">
-      <node ref="R5" pin="1" pintype="passive"/>
-      <node ref="U1" pin="2" pinfunction="PD4" pintype="bidirectional"/>
-    </net>
-    <net code="32" name="Net-(U1-PD5)">
-      <node ref="R6" pin="1" pintype="passive"/>
-      <node ref="U1" pin="9" pinfunction="PD5" pintype="bidirectional"/>
-    </net>
-    <net code="33" name="Net-(U1-PD6)">
-      <node ref="R7" pin="1" pintype="passive"/>
-      <node ref="U1" pin="10" pinfunction="PD6" pintype="bidirectional"/>
-    </net>
-    <net code="34" name="Net-(U1-PD7)">
-      <node ref="R8" pin="1" pintype="passive"/>
-      <node ref="U1" pin="11" pinfunction="PD7" pintype="bidirectional"/>
-    </net>
-    <net code="35" name="Net-(U2-X1)">
+    <net code="40" name="Net-(U2-X1)">
       <node ref="U2" pin="1" pinfunction="X1" pintype="input"/>
       <node ref="XTAL1" pin="1" pinfunction="X1" pintype="input"/>
     </net>
-    <net code="36" name="Net-(U2-X2)">
+    <net code="41" name="Net-(U2-X2)">
       <node ref="U2" pin="2" pinfunction="X2" pintype="bidirectional"/>
       <node ref="XTAL1" pin="4" pinfunction="X2" pintype="input"/>
     </net>
-    <net code="37" name="unconnected-(DS1-NC-Pad11)">
+    <net code="42" name="unconnected-(DS1-NC-Pad11)">
       <node ref="DS1" pin="11" pinfunction="NC" pintype="no_connect"/>
     </net>
-    <net code="38" name="unconnected-(U1-PC3-Pad26)">
+    <net code="43" name="unconnected-(U1-PC3-Pad26)">
       <node ref="U1" pin="26" pinfunction="PC3" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="39" name="unconnected-(U1-PE1-Pad6)">
+    <net code="44" name="unconnected-(U1-PE1-Pad6)">
       <node ref="U1" pin="6" pinfunction="PE1" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="40" name="unconnected-(U1-PE2-Pad19)">
+    <net code="45" name="unconnected-(U1-PE2-Pad19)">
       <node ref="U1" pin="19" pinfunction="PE2" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="41" name="unconnected-(U1-PE3-Pad22)">
+    <net code="46" name="unconnected-(U1-PE3-Pad22)">
       <node ref="U1" pin="22" pinfunction="PE3" pintype="bidirectional+no_connect"/>
     </net>
-    <net code="42" name="unconnected-(U2-SQW{slash}~INT-Pad7)">
+    <net code="47" name="unconnected-(U2-SQW{slash}~INT-Pad7)">
       <node ref="U2" pin="7" pinfunction="SQW/~INT" pintype="output+no_connect"/>
     </net>
-    <net code="43" name="unconnected-(XTAL1-NC-Pad2)">
+    <net code="48" name="unconnected-(XTAL1-NC-Pad2)">
       <node ref="XTAL1" pin="2" pinfunction="NC" pintype="no_connect"/>
     </net>
-    <net code="44" name="unconnected-(XTAL1-NC-Pad3)">
+    <net code="49" name="unconnected-(XTAL1-NC-Pad3)">
       <node ref="XTAL1" pin="3" pinfunction="NC" pintype="no_connect"/>
     </net>
   </nets>
